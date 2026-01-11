@@ -4,9 +4,9 @@
  */
 
 import type { AppId } from "./types";
-import { invoke, isWeb, WEB_AUTH_STORAGE_KEY } from "./adapter";
+import { invoke, isWeb, WEB_AUTH_STORAGE_KEY, buildWebApiUrl } from "./adapter";
 
-const RELAY_PULSE_API = "/api/health/status";
+const RELAY_PULSE_API_PATH = "/health/status";
 const CACHE_TTL = 60 * 1000; // 1 分钟缓存
 const HEALTHCHECK_TIMEOUT_MS = 10_000;
 
@@ -178,7 +178,7 @@ export async function fetchAllHealthStatus(): Promise<
         if (storedAuth) {
           headers.Authorization = `Basic ${storedAuth}`;
         }
-        const response = await fetch(RELAY_PULSE_API, {
+        const response = await fetch(buildWebApiUrl(RELAY_PULSE_API_PATH), {
           headers,
           signal: controller.signal,
         });

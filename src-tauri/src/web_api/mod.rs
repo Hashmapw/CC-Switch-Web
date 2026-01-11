@@ -50,6 +50,7 @@ struct WebTokens {
 }
 
 const DEFAULT_API_PREFIX: &str = "/api";
+const DEFAULT_CLIENT_API_BASE: &str = "./api";
 
 /// Serve embedded static assets with index.html fallback for SPA routes.
 async fn serve_static(
@@ -228,12 +229,19 @@ fn web_api_prefix() -> String {
     configured.unwrap_or_else(|| DEFAULT_API_PREFIX.to_string())
 }
 
+fn client_api_base() -> String {
+    env::var("WEB_CLIENT_API_BASE")
+        .ok()
+        .filter(|v| !v.trim().is_empty())
+        .unwrap_or_else(|| DEFAULT_CLIENT_API_BASE.to_string())
+}
+
 /// Construct the axum router with all API routes and middleware.
 pub fn create_router(state: SharedState, password: String) -> Router {
     let tokens = Arc::new(load_or_generate_tokens());
     let csrf_token = Some(Arc::new(tokens.csrf_token.clone()));
     let api_prefix = web_api_prefix();
-    let api_prefix_arc = Arc::new(api_prefix.clone());
+    let client_base = Arc::new(client_api_base());
 
     let hsts_enabled = env::var("ENABLE_HSTS")
         .map(|v| matches!(v.as_str(), "1" | "true" | "TRUE" | "yes" | "on"))
@@ -258,7 +266,7 @@ pub fn create_router(state: SharedState, password: String) -> Router {
             "/",
             get({
                 let tokens = tokens.clone();
-                let api_base = api_prefix_arc.clone();
+                let api_base = client_base.clone();
                 move |path, headers| serve_static(path, headers, tokens.clone(), api_base.clone())
             }),
         )
@@ -266,7 +274,7 @@ pub fn create_router(state: SharedState, password: String) -> Router {
             "/*path",
             get({
                 let tokens = tokens.clone();
-                let api_base = api_prefix_arc.clone();
+                let api_base = client_base.clone();
                 move |path, headers| serve_static(path, headers, tokens.clone(), api_base.clone())
             }),
         )

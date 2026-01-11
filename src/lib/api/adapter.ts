@@ -10,7 +10,7 @@ interface Endpoint {
   body?: unknown;
 }
 
-const DEFAULT_WEB_API_BASE = "/api";
+const DEFAULT_WEB_API_BASE = "./api";
 
 // Storage keys - exported for use across modules
 export const WEB_AUTH_STORAGE_KEY = "cc-switch-web-auth";
